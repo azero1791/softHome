@@ -40,8 +40,8 @@ export default {
 
     const fetchCourses = async () => {
       try {
-        const response = await axios.get('http://localhost:8080/api/courses');
-        courses.value = response.data;
+        const response = await axios.get('http://localhost:8080/getCheckingLessons');
+        courses.value = response.data.data;
       } catch (error) {
         console.error('获取课程信息失败', error);
       }
@@ -49,7 +49,9 @@ export default {
 
     const approveCourse = async (lid) => {
       try {
-        await axios.post(`http://localhost:8080/api/courses/approve/${lid}`);
+        await axios.put(`http://localhost:8080/checkSuccessLessonGrade`,{
+        lId:lid
+        });
         fetchCourses();
       } catch (error) {
         console.error('批准课程失败', error);
@@ -58,7 +60,9 @@ export default {
 
     const rejectCourse = async (lid) => {
       try {
-        await axios.post(`http://localhost:8080/api/courses/reject/${lid}`);
+        await axios.put(`http://localhost:8080/checkRejectLessonGrade`,{
+          lId:lid
+        });
         fetchCourses();
       } catch (error) {
         console.error('拒绝课程失败', error);

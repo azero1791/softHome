@@ -13,6 +13,8 @@
         <div>
           <label for="gSId">学生ID</label>
           <input id="gSId" v-model="gSId" />
+          <label for="gLId">课程ID</label>
+          <input id="gLId" v-model="gLId" />
         </div>
         <button @click="queryStudentGrade">查询</button>
         <button @click="resetView">返回</button>
@@ -25,10 +27,10 @@
           <label for="gLId">课程ID</label>
           <input id="gLId" v-model="gLId" />
         </div>
-        <div>
-          <label for="gTId">老师ID</label>
-          <input id="gTId" v-model="gTId" />
-        </div>
+<!--        <div>-->
+<!--          <label for="gTId">老师ID</label>-->
+<!--          <input id="gTId" v-model="gTId" />-->
+<!--        </div>-->
         <button @click="queryCourseGrade">查询</button>
         <button @click="resetView">返回</button>
       </div>
@@ -40,8 +42,8 @@
           <thead>
           <tr>
             <th v-if="showStudentInput">课程名</th>
-            <th v-if="showStudentInput">课程ID</th>
-            <th v-if="showStudentInput">教师名</th>
+            <th v-if="showStudentInput">学生名</th>
+            <th v-if="showStudentInput">成绩</th>
             <th v-if="showCourseInput">学生名</th>
             <th v-if="showCourseInput">学生ID</th>
             <th v-if="showCourseInput">成绩</th>
@@ -50,8 +52,8 @@
           <tbody>
           <tr v-for="(record, index) in grades" :key="index">
             <td v-if="showStudentInput">{{ record.glname }}</td>
-            <td v-if="showStudentInput">{{ record.glid }}</td>
-            <td v-if="showStudentInput">{{ record.gtname }}</td>
+            <td v-if="showStudentInput">{{ record.gsname }}</td>
+            <td v-if="showStudentInput">{{ record.gpoint }}</td>
             <td v-if="showCourseInput">{{ record.gsname }}</td>
             <td v-if="showCourseInput">{{ record.gsid }}</td>
             <td v-if="showCourseInput">{{ record.gpoint }}</td>
@@ -93,8 +95,11 @@ export default {
     // 查询学生成绩
     const queryStudentGrade = async () => {
       try {
-        const response = await axios.get(`http://localhost:8080/api/student-grades?gSId=${gSId.value}`);
-        grades.value = response.data;
+        const response = await axios.post(`http://localhost:8080/studentGetSingleGrade`,{
+          gSId:gSId.value,
+          gLId:gLId.value
+        });
+        grades.value = response.data.data;
       } catch (error) {
         console.error('查询学生成绩失败:', error);
       }
@@ -103,8 +108,10 @@ export default {
     // 查询课程成绩
     const queryCourseGrade = async () => {
       try {
-        const response = await axios.get(`http://localhost:8080/api/course-grades?gLId=${gLId.value}&gTId=${gTId.value}`);
-        grades.value = response.data;
+        const response = await axios.post(`http://localhost:8080/teacherGetCheckedGrade`,{
+          gLId: gLId.value
+        });
+        grades.value = response.data.data;
       } catch (error) {
         console.error('查询课程成绩失败:', error);
       }

@@ -33,35 +33,17 @@ export default {
     const newGrade = ref(''); // 新成绩
     const currentGrade = ref(null); // 当前成绩
 
-    // 获取当前成绩
-    const fetchGrade = async () => {
-      if (selectedStudent.value && course.value) {
-        try {
-          const response = await axios.get('http://localhost:8080/api/getGrade', {
-            params: {
-              student: selectedStudent.value,
-              course: course.value
-            }
-          });
-          currentGrade.value = response.data.grade || null;
-        } catch (error) {
-          console.error('获取成绩失败:', error);
-          currentGrade.value = null;
-        }
-      }
-    };
-
     // 修改成绩
     const modifyGrade = async () => {
       if (selectedStudent.value && course.value && newGrade.value) {
         try {
-          const response = await axios.post('http://localhost:8080/api/updateGrade', {
+          const response = await axios.put('http://localhost:8080/modifyGrade', {
             gSId: selectedStudent.value,
             gLId: course.value,
             gPoint: newGrade.value
           });
 
-          if (response.data.success) {
+          if (response.data.code === 1) {
             alert('成绩修改成功');
             selectedStudent.value = '';
             course.value = '';
@@ -84,7 +66,6 @@ export default {
       course,
       newGrade,
       currentGrade,
-      fetchGrade,
       modifyGrade
     };
   }

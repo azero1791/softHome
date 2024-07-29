@@ -17,6 +17,10 @@
         </div>
         <div class="form-group">
 <!--          <label for="lCollege">课程学院</label>-->
+          <input type="text" id="lTName" v-model="lTName" placeholder="教师名" required>
+        </div>
+        <div class="form-group">
+          <!--          <label for="lCollege">课程学院</label>-->
           <input type="text" id="lCollege" v-model="lCollege" placeholder="课程学院" required>
         </div>
         <button type="submit">提交</button>
@@ -42,18 +46,28 @@ export default {
     const lTId = ref('');
     const lCollege = ref('');
     const message = ref('');
+    const lTName = ref('');
 
     // 提交课程信息到后端的函数
     const submitCourse = async () => {
       try {
         // 使用 Axios 发送 POST 请求到后端 API，保存课程信息
-        const response = await axios.post('/api/add-course', {
+        const response = await axios.post('http://localhost:8080/addLessons', {
           lName: lName.value,
           lType: lType.value,
           lTId: lTId.value,
-          lCollege: lCollege.value
+          lCollege: lCollege.value,
+          lTName: lTName.value
         });
         message.value = response.data.message; // 显示后端返回的信息
+        if(response.data.code === 1)
+        {
+              lName.value = '';
+              lType.value = '';
+              lTId.value = '' ;
+              lCollege.value = '';
+              lTName.value = '';
+        }
       } catch (error) {
         console.error('添加课程失败:', error);
         // 你可以从 error 对象中获取更详细的错误信息，但这里为了简单起见，我们使用通用消息
@@ -66,6 +80,7 @@ export default {
       lType,
       lTId,
       lCollege,
+      lTName,
       message,
       submitCourse
     };

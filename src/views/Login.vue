@@ -31,44 +31,37 @@ import { useRouter } from 'vue-router';
 
 export default {
   setup() {
-    // 用户ID
     const uId = ref('');
-    // 用户名
     const uName = ref('');
-    // 密码
     const uPw = ref('');
-    // 角色
     const uIdentity = ref('');
-    // 错误信息
     const error = ref('');
-    // 路由实例
     const router = useRouter();
 
-    // 登录函数
     const login = async () => {
       try {
-        // 发送登录请求到后端
-        const response = await axios.post('http://localhost:8080/api/login', {
+        const response = await axios.post('http://localhost:8080/login', {
           uId: uId.value,
           uName: uName.value,
-          uPw: uPw.value,
+          uPwd: uPw.value,
           uIdentity: uIdentity.value
         });
 
-        // 判断登录是否成功
-        if (response.data.success) {
-          // 根据角色跳转到相应的页面，并传递用户信息
+        if (response.data.code === 1) {
           const userInfo = {
             uId: uId.value,
             uName: uName.value,
             uIdentity: uIdentity.value
           };
 
-          if (uIdentity.value === 'A') router.push({name: 'Admin', props: userInfo});
-          else if (uIdentity.value === 'B') router.push({name: 'Teacher', props: userInfo});
-          else if (uIdentity.value === 'C') router.push({name: 'Student', props: userInfo});
+          if (uIdentity.value === 'A') {
+            router.push({ name: 'Admin', params: { uId:uId.value } });
+          } else if (uIdentity.value === 'B') {
+            router.push({ name: 'Teacher', params: { uId:uId.value } });
+          } else if (uIdentity.value === 'C') {
+            router.push({ name: 'Student', params: { uId:uId.value } });
+          }
         } else {
-          // 显示错误信息
           error.value = response.data.message || '用户名或密码错误';
           uName.value = '';
           uPw.value = '';

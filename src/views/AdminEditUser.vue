@@ -3,12 +3,14 @@
     <div class="admin-container">
       <h2>编辑用户</h2>
       <div class="li-container">
-        <div v-if="editingUser" class="edit-form">
+        <div v-if="editFlag" class="edit-form">
           <div class="info">
             <p>原用户名: {{ originalUser.uname }}</p>
-            <p>原用户名: {{ originalUser.uid }}</p>
+            <p>原用户ID: {{ originalUser.uid }}</p>
             <p>原密码: {{ originalUser.upwd }}</p>
-            <p>原身份: {{ originalUser.uidentity }}</p>
+            <p v-if="originalUser.uidentity === 'A'">身份: 管理员</p>
+            <p v-else-if="originalUser.uidentity === 'B'">身份: 老师</p>
+            <p v-else-if="originalUser.uidentity === 'C'">身份: 学生</p>
           </div>
           <input v-model="editingUser.uname" placeholder="新用户名" />
           <input v-model="editingUser.uid" placeholder="新用户ID" />
@@ -33,13 +35,15 @@
           <ul class="user-list">
             <li v-for="(user, index) in users" :key="index" class="user-item">
               <div class="user-info">
-                <p>ID: {{ user.id }}</p>
+                <p>ID: {{ user.uid }}</p>
                 <p>用户名: {{ user.uname }}</p>
-                <p>身份: {{ user.uidentity }}</p>
+                <p v-if="user.uidentity === 'A'">身份: 管理员</p>
+                <p v-else-if="user.uidentity === 'B'">身份: 老师</p>
+                <p v-else-if="user.uidentity === 'C'">身份: 学生</p>
               </div>
               <div class="button-group">
                 <button @click="editUser(user)" class="edit-button">编辑</button>
-                <button @click="deleteUser(user.id)" class="delete-button">删除</button>
+                <button @click="deleteUser(user.uid)" class="delete-button">删除</button>
               </div>
             </li>
           </ul>
@@ -60,15 +64,24 @@ import axios from 'axios';
 export default {
   setup() {
     const users = ref([]);
-    const editingUser = ref(null);
-    const originalUser = ref(null);
+    const editFlag = ref(false);
+    // const editingUser = ref(null);
+    // const originalUser = ref(null);
+    const editingUser = ref({uname:null,
+      uid:null,
+      upwd:null,
+      uidentity:null});
+    const originalUser = ref({uname:null,
+      uid:null,
+      upwd:null,
+      uidentity:null});
     const passwordFieldType = ref('password');
     const message = ref('');
 
     const fetchUsers = async () => {
       try {
-        const response = await axios.get('http://localhost:8080/api/users');
-        users.value = response.data;
+        const response = await axios.get('http://localhost:8080/getAllLogins');
+        users.value = response.data.data;
       } catch (error) {
         message.value = '获取用户信息失败';
       }
@@ -77,15 +90,22 @@ export default {
     const editUser = (user) => {
       originalUser.value = { ...user }; // 保存原始用户信息
       editingUser.value = { ...user }; // 编辑用户信息
+      editFlag.value = true;
     };
 
     const updateUser = async () => {
       try {
-        const response = await axios.put(`http://localhost:8080/api/users/${originalUser.value.id}`, editingUser.value);
+        const response = await axios.put('http://localhost:8080/modifyLogin',{
+          uName: editingUser.value.uname,
+          uId: editingUser.value.uid,
+          uPwd: editingUser.value.upwd,
+          uIdentity: editingUser.value.uidentity
+        });
         message.value = response.data.message;
-        if (response.data.success) {
+        if (response.data.code === 1) {
           editingUser.value = null;
           originalUser.value = null;
+          editFlag.value = false;
           await fetchUsers(); // 重新获取用户信息
         }
       } catch (error) {
@@ -95,9 +115,9 @@ export default {
 
     const deleteUser = async (id) => {
       try {
-        const response = await axios.delete(`http://localhost:8080/api/users/${id}`);
+        const response = await axios.delete(`http://localhost:8080/deleteLogins/${id}`);
         message.value = response.data.message;
-        if (response.data.success) {
+        if (response.data.code === 1) {
           await fetchUsers(); // 重新获取用户信息
         }
       } catch (error) {
@@ -118,6 +138,7 @@ export default {
     onMounted(fetchUsers);
 
     return {
+      editFlag,
       users,
       editingUser,
       originalUser,

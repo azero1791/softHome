@@ -2,8 +2,8 @@
   <div class="teacher">
     <div class="teacher-container">
       <h2>录入成绩</h2>
-      <input v-model="gSId" placeholder="学生用户名" />
-      <input v-model="gLId" placeholder="课程" />
+      <input v-model="gSId" placeholder="学生ID" />
+      <input v-model="gLId" placeholder="课程ID" />
       <input v-model="gPoint" placeholder="成绩" />
       <!-- 提交成绩按钮 -->
       <button @click="submitgPoint">提交成绩</button>
@@ -33,14 +33,14 @@ export default {
       if (gSId.value && gLId.value && gPoint.value) {
         try {
           // 发送POST请求到后端接口
-          const response = await axios.post('http://localhost:8080/api/submitGrade', {
+          const response = await axios.post('http://localhost:8080/addGrade', {
             gSId: gSId.value,
             gLId: gLId.value,
             gPoint: gPoint.value
           });
 
           // 判断请求是否成功
-          if (response.data.success) {
+          if (response.data.code === 1) {
             // 提交成功，清空输入框的值
             gSId.value = '';
             gLId.value = '';

@@ -8,8 +8,10 @@
             <div class="course-details">
               <div class="left-section">
                 <p>课程ID: {{ course.lid }}</p>
-                <p>教师ID: {{ course.ltname }}</p>
-<!--                <p>平均分: {{ course.averageGrade }}</p>-->
+                <p>课程名: {{ course.lname }}</p>
+                <p>教师ID: {{ course.ltid }}</p>
+                <p>教师名: {{ course.ltname }}</p>
+                <!--                <p>平均分: {{ course.averageGrade }}</p>-->
 <!--                <p>及格率: {{ course.passRate }}</p>-->
 <!--                <p>优秀率: {{ course.excellentRate }}</p>-->
               </div>
@@ -35,8 +37,8 @@
             </thead>
             <tbody>
             <tr v-for="(grade, index) in selectedCourseDetails.grades" :key="index">
-              <td>{{ grade.studentId }}</td>
-              <td>{{ grade.grade }}</td>
+              <td>{{ grade.gsid }}</td>
+              <td>{{ grade.gpoint }}</td>
             </tr>
             </tbody>
           </table>
@@ -54,32 +56,23 @@
 <script>
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
+import {useRoute} from "vue-router";
 
 export default {
 
-  props: ['uId', 'uName', 'uIdentity'],
-  computed: {
-    userInfo() {
-      return {
-        uId: this.uId,
-        uName: this.uName,
-        uIdentity: this.uIdentity
-      };
-    }
-  },
 
   setup() {
-    const lTId = this.userInfo.uId; // 教师ID
+     // 教师ID
     const courses = ref([]);
-    const coursedates = ref([]);
     const selectedCourseDetails = ref(null); // 用于存储选中的课程成绩详情
+    const route = useRoute()
+    const lTId = 1004
 
     // 获取课程数据
     const fetchCourses = async () => {
       try {
-        const response = await axios.get('http://localhost:8080/api/audits/courses?lTId=${lTId}');
-        courses.value = response.data;
-        coursedates.value = responsedata.data;
+        const response = await axios.post(`http://localhost:8080/getUncheckedLessons/${lTId}`);
+        courses.value = response.data.data;
       } catch (error) {
         console.error('获取课程数据失败:', error);
       }
@@ -88,21 +81,27 @@ export default {
     // 发送成绩审核请求
     const sendForReview = async (lid) => {
       try {
-        await axios.post(`http://localhost:8080/api/audits/send/${lid}`);
+        await axios.put(`http://localhost:8080/checkLessonGrade`,{
+          lId:lid
+        });
         fetchCourses(); // 重新获取课程数据
       } catch (error) {
         console.error('发送审核失败:', error);
       }
     };
-
+    let grades;
     // 查看具体成绩
-    const viewDetails = async (glId,gTId) => {
+    const viewDetails = async (lid,ltid) => {
       try {
-        const response = await axios.get(`http://localhost:8080/api/audits/grades/${lid}`);
+        const response = await axios.post(`http://localhost:8080/teacherGetUncheckedGrade`,{
+          gLId:lid,
+          gTId:1004
+        });
         selectedCourseDetails.value = {
           lid,
-          grades: response.data.grades
+          grades: response.data.data
         };
+
       } catch (error) {
         console.error('获取课程成绩失败:', error);
       }

@@ -34,7 +34,7 @@ export default {
     const addUser = async () => {
       try {
         if (newUser.value.uId &&newUser.value.uName && newUser.value.uPwd && newUser.value.uIdentity) {
-          const response = await axios.post('http://localhost:8080/api/addUser', newUser.value);
+          const response = await axios.post('http://localhost:8080/addLogin', newUser.value);
           message.value = response.data.message;
           if (response.data.success) {
             newUser.value = { uName: '', uPwd: '', uIdentity: '' };

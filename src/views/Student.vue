@@ -24,25 +24,28 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted,defineProps  } from 'vue';
+import axios from 'axios';
+import {useRoute} from "vue-router";
 
 export default {
-  props: ['uId', 'uName', 'uIdentity'],
-  setup(props) {
+  setup() {
+    const route = useRoute()
+
+    const userInfo = route.params.uId
     // 定义用于存储学生成绩的响应式变量
     const gSIdGrades = ref([]);
 
     // 计算属性，用于获取当前登录学生的用户名（这里假设是uName）
-    const currentStudentName = computed(() => props.uName);
 
     // 获取学生成绩的函数
     const fetchgSIdGrades = async () => {
       try {
         // 发送请求到后端API，获取学生成绩数据
-        // 注意：这里使用了currentStudentName.value来获取计算属性的值
-        const response = await fetch(`/api/gSId-grades?gSId=${currentStudentName.value}`);
-        const data = await response.json();
-        gSIdGrades.value = data.grades;
+        const response = await axios.post('http://localhost:8080/studentGetGrade', {
+          gSId:userInfo
+        });
+        gSIdGrades.value = response.data.data;
       } catch (error) {
         console.error('获取学生成绩失败:', error);
       }
@@ -60,6 +63,7 @@ export default {
   }
 };
 </script>
+
 
 <style scoped>
 .gSId {
