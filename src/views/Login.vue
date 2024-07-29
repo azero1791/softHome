@@ -3,16 +3,18 @@
     <div class="login-container">
       <!-- 登录标题 -->
       <h1>登录</h1>
+      <!-- 用户ID输入框 -->
+      <input v-model="uId" placeholder="用户ID" />
       <!-- 用户名输入框 -->
-      <input v-model="username" placeholder="用户名" />
+      <input v-model="uName" placeholder="用户名" />
       <!-- 密码输入框 -->
-      <input v-model="password" type="password" placeholder="密码" />
+      <input v-model="uPw" type="password" placeholder="密码" />
       <!-- 角色选择框 -->
-      <select v-model="role">
+      <select v-model="uIdentity">
         <option value="">选择身份</option>
-        <option value="admin">管理员</option>
-        <option value="teacher">教师</option>
-        <option value="student">学生</option>
+        <option value="A">管理员</option>
+        <option value="B">教师</option>
+        <option value="C">学生</option>
       </select>
       <!-- 登录按钮 -->
       <button @click="login">登录</button>
@@ -23,55 +25,65 @@
 </template>
 
 <script>
+import axios from 'axios';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 export default {
   setup() {
+    // 用户ID
+    const uId = ref('');
     // 用户名
-    const username = ref('');
+    const uName = ref('');
     // 密码
-    const password = ref('');
+    const uPw = ref('');
     // 角色
-    const role = ref('');
+    const uIdentity = ref('');
     // 错误信息
     const error = ref('');
     // 路由实例
     const router = useRouter();
 
     // 登录函数
-    const login = () => {
-      // 预设的用户信息
-      const users = {
-        admin: { username: 'admin', password: 'admin123' },
-        teacher: { username: 'teacher', password: 'teacher123' },
-        student: { username: 'student', password: 'student123' }
-      };
+    const login = async () => {
+      try {
+        // 发送登录请求到后端
+        const response = await axios.post('http://localhost:8080/api/login', {
+          uId: uId.value,
+          uName: uName.value,
+          uPw: uPw.value,
+          uIdentity: uIdentity.value
+        });
 
-      // 判断用户名和密码是否匹配
-      if (
-          username.value === users[role.value]?.username &&
-          password.value === users[role.value]?.password
-      ) {
-        // // 将用户名作为查询参数添加到路由中
-        // var uname=username.value;
-        // router.push({name:username,query:{uname}});
-        // 跳转到对应角色的页面
-        router.push(`/${role.value}`);
-      } else {
-        // 用户名或密码错误，显示错误信息并清空输入框
-        error.value = '用户名或密码错误';
-        username.value = '';
-        password.value = '';
+        // 判断登录是否成功
+        if (response.data.success) {
+          // 根据角色跳转到相应的页面，并传递用户信息
+          const userInfo = {
+            uId: uId.value,
+            uName: uName.value,
+            uIdentity: uIdentity.value
+          };
+
+          if (uIdentity.value === 'A') router.push({name: 'Admin', props: userInfo});
+          else if (uIdentity.value === 'B') router.push({name: 'Teacher', props: userInfo});
+          else if (uIdentity.value === 'C') router.push({name: 'Student', props: userInfo});
+        } else {
+          // 显示错误信息
+          error.value = response.data.message || '用户名或密码错误';
+          uName.value = '';
+          uPw.value = '';
+        }
+      } catch (error) {
+        console.error('登录请求失败:', error);
+        error.value = '登录请求失败，请重试。';
       }
-
     };
 
     return {
-      // 返回模板中使用的数据和方法
-      username,
-      password,
-      role,
+      uId,
+      uName,
+      uPw,
+      uIdentity,
       error,
       login
     };

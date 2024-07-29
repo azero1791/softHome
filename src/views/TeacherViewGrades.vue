@@ -11,12 +11,8 @@
       <div v-if="showStudentInput">
         <h2>查看学生成绩</h2>
         <div>
-          <label for="studentId">学生ID</label>
-          <input id="studentId" v-model="studentId" />
-        </div>
-        <div>
-          <label for="courseId">课程ID</label>
-          <input id="courseId" v-model="studentCourseId" />
+          <label for="gSId">学生ID</label>
+          <input id="gSId" v-model="gSId" />
         </div>
         <button @click="queryStudentGrade">查询</button>
         <button @click="resetView">返回</button>
@@ -26,30 +22,46 @@
       <div v-if="showCourseInput">
         <h2>查看课程成绩</h2>
         <div>
-          <label for="courseId">课程ID</label>
-          <input id="courseId" v-model="courseId" />
+          <label for="gLId">课程ID</label>
+          <input id="gLId" v-model="gLId" />
         </div>
         <div>
-          <label for="teacherId">老师ID</label>
-          <input id="teacherId" v-model="teacherId" />
+          <label for="gTId">老师ID</label>
+          <input id="gTId" v-model="gTId" />
         </div>
         <button @click="queryCourseGrade">查询</button>
         <button @click="resetView">返回</button>
       </div>
 
       <!-- 成绩列表展示 -->
-      <div v-if="grades.length > 0">
+      <div v-if="grades.length > 0" class="grades-container">
         <h2>成绩列表</h2>
-        <ul>
-          <li v-for="(record, index) in grades" :key="index">
-            <span v-if="showStudentInput">{{ record.course }} 课程的成绩：{{ record.grade }}</span>
-            <span v-if="showCourseInput">{{ record.studentId }} - {{ record.studentName }} 的成绩：{{ record.grade }}</span>
-          </li>
-        </ul>
+        <table>
+          <thead>
+          <tr>
+            <th v-if="showStudentInput">课程名</th>
+            <th v-if="showStudentInput">课程ID</th>
+            <th v-if="showStudentInput">教师名</th>
+            <th v-if="showCourseInput">学生名</th>
+            <th v-if="showCourseInput">学生ID</th>
+            <th v-if="showCourseInput">成绩</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr v-for="(record, index) in grades" :key="index">
+            <td v-if="showStudentInput">{{ record.glname }}</td>
+            <td v-if="showStudentInput">{{ record.glid }}</td>
+            <td v-if="showStudentInput">{{ record.gtname }}</td>
+            <td v-if="showCourseInput">{{ record.gsname }}</td>
+            <td v-if="showCourseInput">{{ record.gsid }}</td>
+            <td v-if="showCourseInput">{{ record.gpoint }}</td>
+          </tr>
+          </tbody>
+        </table>
         <button @click="resetView">返回</button>
       </div>
       <router-link to="/teacher">
-        <button>返回</button>
+        <button>返回教师界面</button>
       </router-link>
     </div>
   </div>
@@ -57,15 +69,15 @@
 
 <script>
 import { ref } from 'vue';
+import axios from 'axios';
 
 export default {
   setup() {
     const showStudentInput = ref(false);
     const showCourseInput = ref(false);
-    const studentId = ref('');
-    const studentCourseId = ref('');
-    const courseId = ref('');
-    const teacherId = ref('');
+    const gSId = ref('');
+    const gLId = ref('');
+    const gTId = ref('');
     const grades = ref([]);
 
     // 重置视图
@@ -73,19 +85,16 @@ export default {
       showStudentInput.value = false;
       showCourseInput.value = false;
       grades.value = [];
-      studentId.value = '';
-      studentCourseId.value = '';
-      courseId.value = '';
-      teacherId.value = '';
+      gSId.value = '';
+      gLId.value = '';
+      gTId.value = '';
     };
 
     // 查询学生成绩
     const queryStudentGrade = async () => {
       try {
-        // 模拟后端 API 调用
-        const response = await fetch(`/api/student-grades?studentId=${studentId.value}&courseId=${studentCourseId.value}`);
-        const data = await response.json();
-        grades.value = data.grades;
+        const response = await axios.get(`http://localhost:8080/api/student-grades?gSId=${gSId.value}`);
+        grades.value = response.data;
       } catch (error) {
         console.error('查询学生成绩失败:', error);
       }
@@ -94,10 +103,8 @@ export default {
     // 查询课程成绩
     const queryCourseGrade = async () => {
       try {
-        // 模拟后端 API 调用
-        const response = await fetch(`/api/course-grades?courseId=${courseId.value}&teacherId=${teacherId.value}`);
-        const data = await response.json();
-        grades.value = data.grades;
+        const response = await axios.get(`http://localhost:8080/api/course-grades?gLId=${gLId.value}&gTId=${gTId.value}`);
+        grades.value = response.data;
       } catch (error) {
         console.error('查询课程成绩失败:', error);
       }
@@ -106,10 +113,9 @@ export default {
     return {
       showStudentInput,
       showCourseInput,
-      studentId,
-      studentCourseId,
-      courseId,
-      teacherId,
+      gSId,
+      gLId,
+      gTId,
       grades,
       resetView,
       queryStudentGrade,
@@ -135,11 +141,11 @@ export default {
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   text-align: center;
   width: 100%;
-  max-width: 600px;
+  max-width: 800px;
 }
 
 h2 {
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
   color: #333;
 }
 
@@ -160,32 +166,28 @@ button:hover {
   background: #00f2fe;
 }
 
-div {
-  margin-bottom: 1rem;
-}
-
-label {
-  display: block;
-  margin-bottom: 0.5rem;
-  color: #555;
-}
-
-input {
+.grades-container {
+  margin-top: 2rem;
   width: 100%;
-  padding: 0.5rem;
+  max-width: 800px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+table, th, td {
   border: 1px solid #ddd;
-  border-radius: 4px;
-  margin-bottom: 1rem;
 }
 
-ul {
-  list-style: none;
-  padding: 0;
-}
-
-li {
-  margin-bottom: 1rem;
+th, td {
+  padding: 0.8rem;
   text-align: left;
-  color: #333;
+}
+
+th {
+  background: #f2f2f2;
 }
 </style>

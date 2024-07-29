@@ -7,15 +7,15 @@
           <li v-for="(course, index) in courses" :key="index">
             <div class="course-details">
               <div class="left-section">
-                <p>课程ID: {{ course.courseId }}</p>
-                <p>教师ID: {{ course.teacherId }}</p>
-                <p>平均分: {{ course.averageGrade }}</p>
-                <p>及格率: {{ course.passRate }}</p>
-                <p>优秀率: {{ course.excellentRate }}</p>
+                <p>课程ID: {{ course.lid }}</p>
+                <p>教师ID: {{ course.ltname }}</p>
+<!--                <p>平均分: {{ course.averageGrade }}</p>-->
+<!--                <p>及格率: {{ course.passRate }}</p>-->
+<!--                <p>优秀率: {{ course.excellentRate }}</p>-->
               </div>
               <div class="right-section">
-                <button @click="sendForReview(index)">发送审核</button>
-                <button @click="viewDetails(course.courseId)">查看具体成绩</button>
+                <button @click="sendForReview(course.lid)">发送审核</button>
+                <button @click="viewDetails(course.lid,course.ltid)">查看具体成绩</button>
               </div>
             </div>
           </li>
@@ -24,7 +24,7 @@
 
       <!-- 成绩表展示 -->
       <div v-if="selectedCourseDetails" class="grades-container">
-        <h3>课程 {{ selectedCourseDetails.courseId }} 的成绩</h3>
+        <h3>课程 {{ selectedCourseDetails.lid }} 的成绩</h3>
         <div class="li-container">
           <table>
             <thead>
@@ -42,56 +42,70 @@
           </table>
         </div>
 
-        <button @click="closeDetails">返回</button>
+        <button @click="closeDetails">返回发送审核界面</button>
       </div>
       <router-link to="/teacher">
-        <button>返回</button>
+        <button>返回教师界面</button>
       </router-link>
     </div>
   </div>
 </template>
 
 <script>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import axios from 'axios';
 
 export default {
+
+  props: ['uId', 'uName', 'uIdentity'],
+  computed: {
+    userInfo() {
+      return {
+        uId: this.uId,
+        uName: this.uName,
+        uIdentity: this.uIdentity
+      };
+    }
+  },
+
   setup() {
+    const lTId = this.userInfo.uId; // 教师ID
     const courses = ref([]);
-
-    // 模拟从后端获取课程数据
-    const fetchCourses = () => {
-      // 这里替换成实际的后端 API 调用
-      const backendData = [
-        { courseId: '123', teacherId: 't1', averageGrade: 'B', passRate: '85%', excellentRate: '30%' },
-        { courseId: '456', teacherId: 't2', averageGrade: 'A', passRate: '95%', excellentRate: '50%' }
-      ];
-      courses.value = backendData;
-    };
-
-    const reviewRequests = ref(JSON.parse(localStorage.getItem('reviewRequests')) || []);
+    const coursedates = ref([]);
     const selectedCourseDetails = ref(null); // 用于存储选中的课程成绩详情
 
+    // 获取课程数据
+    const fetchCourses = async () => {
+      try {
+        const response = await axios.get('http://localhost:8080/api/audits/courses?lTId=${lTId}');
+        courses.value = response.data;
+        coursedates.value = responsedata.data;
+      } catch (error) {
+        console.error('获取课程数据失败:', error);
+      }
+    };
+
     // 发送成绩审核请求
-    const sendForReview = (index) => {
-      reviewRequests.value.push({
-        courseId: courses.value[index].courseId,
-        teacherId: courses.value[index].teacherId
-      });
-      localStorage.setItem('reviewRequests', JSON.stringify(reviewRequests.value));
+    const sendForReview = async (lid) => {
+      try {
+        await axios.post(`http://localhost:8080/api/audits/send/${lid}`);
+        fetchCourses(); // 重新获取课程数据
+      } catch (error) {
+        console.error('发送审核失败:', error);
+      }
     };
 
     // 查看具体成绩
-    const viewDetails = (courseId) => {
-      // 模拟从后端获取成绩表数据
-      // 这里替换成实际的后端 API 调用
-      const gradesData = [
-        { studentId: 's1', grade: 'A' },
-        { studentId: 's2', grade: 'B' }
-      ];
-      selectedCourseDetails.value = {
-        courseId,
-        grades: gradesData
-      };
+    const viewDetails = async (glId,gTId) => {
+      try {
+        const response = await axios.get(`http://localhost:8080/api/audits/grades/${lid}`);
+        selectedCourseDetails.value = {
+          lid,
+          grades: response.data.grades
+        };
+      } catch (error) {
+        console.error('获取课程成绩失败:', error);
+      }
     };
 
     // 关闭成绩详情
@@ -100,7 +114,7 @@ export default {
     };
 
     // 组件挂载时获取课程数据
-    fetchCourses();
+    onMounted(fetchCourses);
 
     return {
       courses,

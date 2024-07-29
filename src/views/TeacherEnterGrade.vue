@@ -2,11 +2,11 @@
   <div class="teacher">
     <div class="teacher-container">
       <h2>录入成绩</h2>
-      <input v-model="selectedStudent" placeholder="学生用户名" />
-      <input v-model="course" placeholder="课程" />
-      <input v-model="grade" placeholder="成绩" />
+      <input v-model="gSId" placeholder="学生用户名" />
+      <input v-model="gLId" placeholder="课程" />
+      <input v-model="gPoint" placeholder="成绩" />
       <!-- 提交成绩按钮 -->
-      <button @click="submitGrade">提交成绩</button>
+      <button @click="submitgPoint">提交成绩</button>
       <router-link to="/teacher">
         <button>返回</button>
       </router-link>
@@ -16,48 +16,58 @@
 
 <script>
 import { ref } from 'vue';
+import axios from 'axios';
 
 export default {
   setup() {
     // 学生用户名
-    const selectedStudent = ref('');
+    const gSId = ref('');
     // 课程名称
-    const course = ref('');
+    const gLId = ref('');
     // 成绩
-    const grade = ref('');
-    // 初始化grades数组，如果localStorage中有'grades'则解析其值为数组，否则默认为空数组
-    const grades = ref(JSON.parse(localStorage.getItem('grades')) || []);
+    const gPoint = ref('');
 
     // 提交成绩函数
-    // 提交成绩
-    const submitGrade = () => {
+    const submitgPoint = async () => {
       // 如果学生用户名、课程名称和成绩都有值
-      if (selectedStudent.value && course.value && grade.value) {
-        // 将成绩信息添加到grades数组中
-        grades.value.push({
-          student: selectedStudent.value,
-          course: course.value,
-          grade: grade.value
-        });
-        // 将更新后的grades数组存储到localStorage中
-        localStorage.setItem('grades', JSON.stringify(grades.value));
-        // 清空输入框的值
-        selectedStudent.value = '';
-        course.value = '';
-        grade.value = '';
+      if (gSId.value && gLId.value && gPoint.value) {
+        try {
+          // 发送POST请求到后端接口
+          const response = await axios.post('http://localhost:8080/api/submitGrade', {
+            gSId: gSId.value,
+            gLId: gLId.value,
+            gPoint: gPoint.value
+          });
+
+          // 判断请求是否成功
+          if (response.data.success) {
+            // 提交成功，清空输入框的值
+            gSId.value = '';
+            gLId.value = '';
+            gPoint.value = '';
+            alert('成绩提交成功');
+          } else {
+            // 提交失败，显示错误信息
+            alert(response.data.message || '成绩提交失败');
+          }
+        } catch (error) {
+          console.error('成绩提交请求失败:', error);
+          alert('成绩提交请求失败，请重试。');
+        }
+      } else {
+        alert('请填写所有字段');
       }
     };
 
     return {
-      selectedStudent,
-      course,
-      grade,
-      submitGrade
+      gSId,
+      gLId,
+      gPoint,
+      submitgPoint
     };
   }
 };
 </script>
-
 
 <style scoped>
 .teacher {

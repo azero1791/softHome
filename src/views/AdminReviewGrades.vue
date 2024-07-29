@@ -7,15 +7,17 @@
           <li v-for="(course, index) in courses" :key="index">
             <div class="course-details">
               <div class="left-section">
-                <p>课程ID: {{ course.courseId }}</p>
-                <p>教师ID: {{ course.teacherId }}</p>
-                <p>平均分: {{ course.averageGrade }}</p>
-                <p>及格率: {{ course.passRate }}</p>
-                <p>优秀率: {{ course.excellentRate }}</p>
+                <p>课程名: {{ course.lname }}</p>
+                <p>课程ID: {{ course.lid }}</p>
+                <p>教师名: {{ course.ltname }}</p>
+                <p>教师ID: {{ course.ltid }}</p>
+                <!--                <p>平均分: {{ course.averageGrade }}</p>-->
+<!--                <p>及格率: {{ course.passRate }}</p>-->
+<!--                <p>优秀率: {{ course.excellentRate }}</p>-->
               </div>
               <div class="buttons">
-                <button @click="approveCourse(index)">批准</button>
-                <button @click="rejectCourse(index)">拒绝</button>
+                <button @click="approveCourse(course.lid)" class="approve-button">批准</button>
+                <button @click="rejectCourse(course.lid)" class="reject-button">拒绝</button>
               </div>
             </div>
           </li>
@@ -29,42 +31,48 @@
 </template>
 
 <script>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import axios from 'axios';
 
 export default {
   setup() {
     const courses = ref([]);
 
-    // Simulating backend data fetch
-    // Replace with actual backend API call
-    const fetchCourses = () => {
-      // Example backend response
-      const backendData = [
-        { courseId: '123', teacherId: 't1', averageGrade: 'B', passRate: '85%', excellentRate: '30%' },
-        { courseId: '456', teacherId: 't2', averageGrade: 'A', passRate: '95%', excellentRate: '50%' }
-      ];
-      courses.value = backendData;
+    const fetchCourses = async () => {
+      try {
+        const response = await axios.get('http://localhost:8080/api/courses');
+        courses.value = response.data;
+      } catch (error) {
+        console.error('获取课程信息失败', error);
+      }
     };
 
-    const approveCourse = (index) => {
-      courses.value.splice(index, 1); // Example: Remove course from the list
-      // Call backend API to approve the course, handle response
+    const approveCourse = async (lid) => {
+      try {
+        await axios.post(`http://localhost:8080/api/courses/approve/${lid}`);
+        fetchCourses();
+      } catch (error) {
+        console.error('批准课程失败', error);
+      }
     };
 
-    const rejectCourse = (index) => {
-      courses.value.splice(index, 1); // Example: Remove course from the list
-      // Call backend API to reject the course, handle response
+    const rejectCourse = async (lid) => {
+      try {
+        await axios.post(`http://localhost:8080/api/courses/reject/${lid}`);
+        fetchCourses();
+      } catch (error) {
+        console.error('拒绝课程失败', error);
+      }
     };
 
-    // Fetch courses on component mount
-    fetchCourses();
+    onMounted(fetchCourses);
 
     return {
       courses,
       approveCourse,
-      rejectCourse
+      rejectCourse,
     };
-  }
+  },
 };
 </script>
 
@@ -73,7 +81,7 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100vh; /* Adjusted to min-height for better responsiveness */
+  min-height: 100vh;
   background: linear-gradient(to right, #4facfe, #00f2fe);
 }
 
@@ -84,16 +92,16 @@ export default {
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   text-align: center;
   width: 100%;
-  max-width: 800px; /* Adjusted max-width for better layout */
+  max-width: 800px;
 }
 
-.li-container{
-  height: 400px; /* 设定允许滚动区域的高度 */
-  overflow-y: auto; /* 允许垂直滚动 */
+.li-container {
+  height: 400px;
+  overflow-y: auto;
 }
 
 h2 {
-  margin-bottom: 1.5rem; /* Increased margin for spacing */
+  margin-bottom: 1.5rem;
   color: #333;
 }
 
@@ -104,9 +112,9 @@ ul {
 
 li {
   display: flex;
-  justify-content: space-between; /* Adjusted for better alignment */
+  justify-content: space-between;
   align-items: center;
-  padding: 1.5rem 1rem; /* Increased padding for better spacing */
+  padding: 1.5rem 1rem;
   border-bottom: 1px solid #ddd;
 }
 
@@ -118,38 +126,7 @@ li {
 }
 
 .left-section {
-  text-align: left; /* Adjusted alignment for left section */
-}
-
-.buttons {
-  display: flex;
-  gap: 1rem; /* Increased gap for better button spacing */
-}
-
-button {
-  padding: 0.7rem 1.5rem; /* Increased padding for button size */
-  border: none;
-  border-radius: 4px;
-  color: white;
-  font-size: 1rem; /* Adjusted font size for readability */
-  cursor: pointer;
-  transition: background 0.3s ease;
-}
-
-button:nth-of-type(1) {
-  background: #4caf50; /* Green for approve */
-}
-
-button:nth-of-type(1):hover {
-  background: #45a049;
-}
-
-button:nth-of-type(2) {
-  background: #f76c6c; /* Red for reject */
-}
-
-button:nth-of-type(2):hover {
-  background: #d9534f;
+  text-align: left;
 }
 
 .back-button {
@@ -169,4 +146,34 @@ button:nth-of-type(2):hover {
   background: #00f2fe;
 }
 
+.buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+button {
+  padding: 0.7rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.approve-button {
+  background: #4caf50;
+}
+
+.approve-button:hover {
+  background: #45a049;
+}
+
+.reject-button {
+  background: #f76c6c;
+}
+
+.reject-button:hover {
+  background: #d9534f;
+}
 </style>

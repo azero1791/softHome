@@ -3,18 +3,20 @@
     <div class="admin-container">
       <h2>增加用户</h2>
       <div>
-        <input v-model="newUser.username" placeholder="用户名" />
-        <input v-model="newUser.password" type="password" placeholder="密码" />
-        <select v-model="newUser.role">
+        <input v-model="newUser.uName" placeholder="用户名" />
+        <input v-model="newUser.uPwd" type="password" placeholder="密码" />
+        <input v-model="newUser.uId" placeholder="用户ID" />
+        <select v-model="newUser.uIdentity">
           <option value="">选择身份</option>
-          <option value="admin">管理员</option>
-          <option value="teacher">教师</option>
-          <option value="student">学生</option>
+          <option value="A">管理员</option>
+          <option value="B">教师</option>
+          <option value="C">学生</option>
         </select>
         <button @click="addUser">增加用户</button>
         <router-link to="/admin">
           <button>返回</button>
         </router-link>
+        <p v-if="message">{{ message }}</p>
       </div>
     </div>
   </div>
@@ -22,23 +24,33 @@
 
 <script>
 import { ref } from 'vue';
+import axios from 'axios';
 
 export default {
   setup() {
-    const newUser = ref({ username: '', password: '', role: '' });
-    const users = ref(JSON.parse(localStorage.getItem('users')) || []);
+    const newUser = ref({ uId: '', uName: '', uPwd: '', uIdentity: '' });
+    const message = ref('');
 
-    const addUser = () => {
-      if (newUser.value.username && newUser.value.password && newUser.value.role) {
-        users.value.push({ ...newUser.value });
-        localStorage.setItem('users', JSON.stringify(users.value));
-        newUser.value = { username: '', password: '', role: '' };
+    const addUser = async () => {
+      try {
+        if (newUser.value.uId &&newUser.value.uName && newUser.value.uPwd && newUser.value.uIdentity) {
+          const response = await axios.post('http://localhost:8080/api/addUser', newUser.value);
+          message.value = response.data.message;
+          if (response.data.success) {
+            newUser.value = { uName: '', uPwd: '', uIdentity: '' };
+          }
+        } else {
+          message.value = '请填写完整信息';
+        }
+      } catch (error) {
+        message.value = '添加用户失败，请重试';
       }
     };
 
     return {
       newUser,
-      addUser
+      addUser,
+      message
     };
   }
 };
@@ -99,5 +111,10 @@ button {
 
 button:hover {
   background: #00f2fe;
+}
+
+p {
+  margin-top: 1rem;
+  color: red;
 }
 </style>

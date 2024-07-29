@@ -6,10 +6,10 @@
         <ul>
           <li><router-link to="/admin/add-user">增加用户</router-link></li>
           <li><router-link to="/admin/edit-user">编辑用户</router-link></li>
-          <li><router-link to="/admin/delete-user">删除用户</router-link></li>
           <li><router-link to="/admin/review-grades">审核成绩</router-link></li>
+          <li><router-link to="/admin/add-course">添加课程</router-link></li>
+          <li><router-link to="/admin/edit-course">编辑课程</router-link></li>
           <li><router-link to="/">返回登陆界面</router-link></li>
-
         </ul>
       </nav>
     </div>
